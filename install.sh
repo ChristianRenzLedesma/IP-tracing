@@ -2,9 +2,9 @@
 
 echo ""
 echo "╔═══════════════════════════════════════════╗"
-echo "║           🚀 IP TRACKER INSTALL 🚀        ║"
-echo "║         Facebook Style IP Logger          ║
-echo "║              For Termux/Linux             ║
+echo "║           🚀 IP TRACKER INSTALL 🚀        ║
+echo "║         With Server Selection            ║
+echo "║        Local 🆚 Cloudflare Tunnels       ║
 echo "╚═══════════════════════════════════════════╝"
 echo ""
 
@@ -46,69 +46,44 @@ echo "✅ Python and pip are installed"
 # Install required packages
 echo ""
 echo "📦 Installing dependencies..."
-pip3 install flask
+pip3 install flask requests
 
 # Install the package
 echo ""
 echo "🚀 Installing IP Tracker..."
 python3 setup.py install
 
-# Create desktop entry for Linux (if not Termux)
-if [ "$IS_TERMUX" = false ]; then
+# Install Cloudflared if requested
+if [ "$1" = "--with-cloudflare" ]; then
     echo ""
-    echo "🖥️ Creating desktop entry..."
-    cat > ~/.local/share/applications/ip-tracker.desktop << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=IP Tracker
-Comment=Facebook-style IP Tracker
-Exec=ip-tracker
-Icon=network-wired
-Terminal=true
-Categories=Network;
-EOF
-fi
-
-# Create termux shortcut script
-if [ "$IS_TERMUX" = true ]; then
-    echo ""
-    echo "📱 Creating Termux shortcut..."
-    cat > $PREFIX/bin/ip-tracker-start << 'EOF'
-#!/bin/bash
-cd ~/ip-tracker
-ip-tracker
-EOF
-    chmod +x $PREFIX/bin/ip-tracker-start
-    
-    # Create termux-url-opener integration
-    echo ""
-    echo "🔗 Setting up URL opener..."
-    cat > ~/bin/termux-url-opener << 'EOF'
-#!/bin/bash
-if [[ $1 == *"ip-tracker"* ]]; then
-    echo "Opening IP Tracker..."
-    ip-tracker-start
-fi
-EOF
-    chmod +x ~/bin/termux-url-opener
+    echo "🌐 Installing Cloudflared for tunnels..."
+    if [ "$IS_TERMUX" = true ]; then
+        pkg install cloudflared -y
+    else
+        wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared
+        chmod +x /usr/local/bin/cloudflared
+    fi
+    echo "✅ Cloudflared installed"
 fi
 
 echo ""
 echo "✅ Installation complete!"
 echo ""
-echo "📖 USAGE:"
-echo "   ip-tracker                    # Start with full UI"
-echo "   ip-tracker --port 8080        # Custom port"
-echo "   ip-tracker --simple           # Simple mode"
-echo "   ip-tracker --help             # Show help"
+echo "🎯 SERVER OPTIONS:"
+echo "   ip-tracker --server local          # Local network only"
+echo "   ip-tracker --server cloudflare     # Ready for Cloudflare tunnel"
+echo ""
+echo "📖 BASIC USAGE:"
+echo "   ip-tracker                         # Local server with full UI"
+echo "   ip-tracker --port 8080             # Custom port"
+echo "   ip-tracker --simple                # Simple mode"
 echo ""
 
 if [ "$IS_TERMUX" = true ]; then
-    echo "📱 TERMUX SPECIFIC:"
-    echo "   termux-open-url http://127.0.0.1:5000    # Open in browser"
-    echo "   termux-clipboard-set http://YOUR_IP:5000 # Copy URL"
-    echo "   ip-tracker-start                         # Quick start"
+    echo "📱 TERMUX COMMANDS:"
+    echo "   ip-tracker-local                # Quick local start"
+    echo "   ip-tracker-cloudflare           # Quick cloudflare setup"
+    echo "   termux-open-url http://127.0.0.1:5000"
     echo ""
 fi
 
